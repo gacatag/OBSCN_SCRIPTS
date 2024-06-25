@@ -1200,7 +1200,7 @@ dev.off()
 
 ####
 
-pdf("figS1.pdf", width=21, height=35, pointsize=16)
+pdf("figS2.pdf", width=21, height=35, pointsize=16)
 
 ordIdx<-c(3,1,4,2)
 colInd<- c(2,4,1,3)
@@ -1788,7 +1788,7 @@ a3GrList<- a3GrList[which(leaveA5In)]
 #Rename figure file to FigS2
 file.rename(
   "./AllPsiA5_chr1:228377931-228378006:+_chr1:228377937-228378006:+.pdf",
-  "./figS2.pdf")
+  "./figS3.pdf")
 
 ### Make table
 
@@ -2002,3 +2002,29 @@ allIsGr<- GRanges(as.character(rowData(allIsObj)$chr),
                   strand=as.character(rowData(allIsObj)$strand))
 
 allIsUniqGr<- unique(allIsGr)
+
+
+### PCA analysis
+load("./shinyData/psidat.rda")
+load("./shinyData/groupSam.rda")
+pcdat<-prcomp(psidat)
+summary(pcdat)$importance[2,1:10]*100
+#   PC1    PC2    PC3    PC4    PC5    PC6    PC7    PC8    PC9   PC10 
+#43.123 29.977  7.034  5.312  2.250  1.674  1.344  1.137  1.050  0.894 
+
+pdf("./figS1.pdf", width=5, height=5, pointsize = 12)
+par(mar=c(2.1, 2.1, 1.1, 1.1))
+cols<- rainbow(length(unique(groupSam)))
+ordIdx<-c(3,1,4,2)
+colInd<- c(2,4,1,3)
+cols[4]<- "#FF80FF"
+
+plot(pcdat$x[,1:2], pch=(15:18)[as.numeric(groupSam)], 
+     col=cols[colInd][as.numeric(groupSam)],
+     xlab=paste("PC1 (", as.character(summary(pcdat)$importance[2,1]*100), 
+                "%)", sep=""),
+     ylab=paste("PC2 (", as.character(summary(pcdat)$importance[2,2]*100), 
+                "%)", sep=""), main="")
+legend("left",legend=gsub("ADULT", "POSTNATAL", levels(groupSam)), 
+       col=cols[colInd], pch=15:18)
+dev.off()
