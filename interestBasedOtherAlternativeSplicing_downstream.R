@@ -1200,7 +1200,7 @@ dev.off()
 
 ####
 
-pdf("figS2.pdf", width=21, height=35, pointsize=16)
+pdf("figS3.pdf", width=21, height=35, pointsize=16)
 
 ordIdx<-c(3,1,4,2)
 colInd<- c(2,4,1,3)
@@ -1788,7 +1788,7 @@ a3GrList<- a3GrList[which(leaveA5In)]
 #Rename figure file to FigS2
 file.rename(
   "./AllPsiA5_chr1:228377931-228378006:+_chr1:228377937-228378006:+.pdf",
-  "./figS3.pdf")
+  "./figS4.pdf")
 
 ### Make table
 
@@ -2013,7 +2013,7 @@ summary(pcdat)$importance[2,1:10]*100
 #43.123 29.977  7.034  5.312  2.250  1.674  1.344  1.137  1.050  0.894 
 
 pdf("./figS1.pdf", width=5, height=5, pointsize = 12)
-par(mar=c(2.1, 2.1, 1.1, 1.1))
+par(mar=c(4.1, 4.1, 1.1, 1.1))
 cols<- rainbow(length(unique(groupSam)))
 ordIdx<-c(3,1,4,2)
 colInd<- c(2,4,1,3)
@@ -2021,10 +2021,65 @@ cols[4]<- "#FF80FF"
 
 plot(pcdat$x[,1:2], pch=(15:18)[as.numeric(groupSam)], 
      col=cols[colInd][as.numeric(groupSam)],
-     xlab=paste("PC1 (", as.character(summary(pcdat)$importance[2,1]*100), 
+     xlab=paste("PC1 (", format(summary(pcdat)$importance[2,1]*100, digits=3), 
                 "%)", sep=""),
-     ylab=paste("PC2 (", as.character(summary(pcdat)$importance[2,2]*100), 
+     ylab=paste("PC2 (", format(summary(pcdat)$importance[2,2]*100, digits=3), 
                 "%)", sep=""), main="")
 legend("left",legend=gsub("ADULT", "POSTNATAL", levels(groupSam)), 
        col=cols[colInd], pch=15:18)
 dev.off()
+
+
+# Colour heatmap
+
+load("./shinyData/firstExInd.rda")
+load("./shinyData/lastExInd.rda")
+
+plotdat<- t(psidat)
+plotdat<- plotdat[-c(firstExInd, lastExInd),]
+plotdatVar<- apply(plotdat, 1, function(x){return(var(plotdat))})
+
+pdf("./PSI_variance.pdf", width=5, height=5, pointsize = 12)
+plot(sort(plotdatVar))
+dev.off()
+
+
+library(gplots)
+
+pdf("./figS2.pdf", width=9, height=12, pointsize = 12)
+cols<- rainbow(length(unique(groupSam)))
+ordIdx<-c(3,1,4,2)
+colInd<- c(2,4,1,3)
+cols[4]<- "#FF80FF"
+
+rowCol<- rep(col2hex("darkgrey"), nrow(plotdat))
+rowCol[which((1:ncol(psidat))[-c(firstExInd, lastExInd)] %in% c(17,18))]<- col2hex("brown")
+rowCol[which((1:ncol(psidat))[-c(firstExInd, lastExInd)] %in% (48:58))]<- col2hex("blue")
+rowCol[which((1:ncol(psidat))[-c(firstExInd, lastExInd)] %in% c(97,107))]<- col2hex("purple")
+
+heatmap.2(100*plotdat,
+          colCol=cols[colInd][as.numeric(groupSam)],
+          ColSideColors=cols[colInd][as.numeric(groupSam)],
+          colRow=rowCol,
+          RowSideColors=rowCol,
+          labRow=paste("Exon", (1:ncol(psidat))[-c(firstExInd, lastExInd)]),
+          labCol=paste("S", (1:nrow(plotdat))),
+          trace='none', margins=c(7,5))
+dev.off()
+
+
+pdf("./figS2_legend.pdf", width=9, height=12, pointsize = 12)
+par(mar=rep(0,4))
+plot(0,.5, xaxt="n" , yaxt="n", axes=FALSE, col=NA, xlab="", ylab="")
+legend("center", 
+       legend=c(paste(gsub("HEART", "heart", gsub("MUSCLE", "muscle", gsub("FETAL", "Fetal",  gsub("ADULT", "Postnatal", levels(groupSam))))), 
+                      "samples"), 
+                "Selected exons on the 5' end",
+                "Selected exons in the middle",
+                "Selected exons on the 3' end",
+                "Other exons"),
+       fill=c(cols[colInd], col2hex("brown"), col2hex("blue"), 
+              col2hex("purple"), col2hex("darkgrey") ), bg="white", bty="n")
+
+dev.off()
+
